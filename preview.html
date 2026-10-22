@@ -413,7 +413,7 @@ var ANS=(function(){
     if(a.n&&a.n.trim())c.classList.add('note-on');
     var done=answered(id);c.classList.toggle('ans-done',done);
     var sent=!!SENT[id]&&!done;c.classList.toggle('is-sent',sent);
-    var st=c.querySelector('.ans-state');if(st)st.textContent=busy[id]?'Sending to Tab\u2026':timers[id]?'Sending in 4 s\u2026':done?'Ready to send':sent?'Tap another answer to change it':'Not answered';
+    var st=c.querySelector('.ans-state');if(st)st.textContent=busy[id]?'Sending to Tab\u2026 can take a minute':timers[id]?'Sending in 4 s\u2026':done?'Ready to send':sent?'Tap another answer to change it':'Not answered';
     var un=c.querySelector('.ans-undo');if(un)un.style.display=timers[id]?'inline-flex':'none';
     var one=c.querySelector('.ans-one');if(one)one.style.display=(done&&!timers[id]&&!busy[id])?'inline-flex':'none';
     var se=c.querySelector('.ans-sent');if(se){var ts=SENT[id];se.classList.toggle('show',!!ts&&!done);se.textContent=ts?'\u2713 Sent to Tab '+fDayTime(new Date(ts).toISOString()):''}
@@ -444,7 +444,7 @@ var ANS=(function(){
     try{await post(list);list.forEach(function(id){delete busy[id]});archive(list);
       toast('\u2713 Sent to Tab'+(list.length>1?' \u00b7 '+list.length+' answers':'')+'. Got it.',null,null,null,3500)}
     catch(e){list.forEach(function(id){delete busy[id];paint(id)});fallbackList=list.slice();
-      toast('Couldn\u2019t reach Tab ('+(e.name==='AbortError'?'timed out':e.message)+'). Your answer is saved here.','Send on WhatsApp',url(list),function(){var l=fallbackList||[];setTimeout(function(){archive(l)},400)},12000)}}
+      toast(e.name==='AbortError'?'No confirmation yet. Tab may still get it. Send on WhatsApp to be sure?':'Couldn\u2019t reach Tab ('+e.message+'). Your answer is saved here.','Send on WhatsApp',url(list),function(){var l=fallbackList||[];setTimeout(function(){archive(l)},400)},12000)}}
   function card(c,it){var id=it.id;if(!id)return;items[id]=it;order.push(id);c.setAttribute('data-ans',id);
     var spec=it.answer||{kind:'task',options:['\u2705 Done','\u23f3 Later','\u274c Skip']};var multi=!!spec.multi;
     var kr=c.querySelector('.k-row');if(kr)add(kr,el('span','ans-pill','\u2713 Answered'),el('span','ans-pill sent','\u2713 Sent'));
