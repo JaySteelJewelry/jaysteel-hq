@@ -154,7 +154,7 @@ html{scroll-behavior:auto}
     <section id="s-next" data-panel="next" role="tabpanel" aria-labelledby="tab-next" class="hq-panel pt-6"><h2 class="sec">Next 48 h</h2><div id="next" class="flex flex-col gap-2"></div></section>
     <p id="footnote" class="pt-10 text-xs text-steel"></p>
   </main>
-  <div id="ansBar"><a id="ansSend" href="#" target="_blank" rel="noopener noreferrer">Send answers to Tab <span id="ansN">(0)</span></a><p class="sub">Opens WhatsApp with your answers filled in. Tap send there.</p></div>
+  <div id="ansBar"><a id="ansSend" href="#" role="button">Send answers to Tab <span id="ansN">(0)</span></a><p class="sub">Goes straight to Tab. You stay in HQ.</p></div>
   <div id="ansToast" role="status" aria-live="polite"><span id="ansToastMsg"></span><button id="ansUndo" type="button">Undo</button></div>
 </div>
 
@@ -222,7 +222,29 @@ function ok(f){return f&&!f.missing}
 
 /* ---- Answer mode (Luis Oct 20): answers live in localStorage and leave as ONE prefilled WhatsApp message to Tab ---- */
 var ANS=(function(){
-  var TAB_WA='12512765320';               // Tab's WhatsApp, never Luis's own number
+  var TAB_WA='12512765320';
+  /* Oct 24 (Luis): taps go straight to Tab as one signed mail via form relay to porchlight+hq@mail.tab.bot; HQ stays on screen. WhatsApp only as fallback. */
+  var INBOX='https://formsubmit.co/ajax/porchlight+hq@mail.tab.bot',busy={},timers={};
+  function hex(b){b=new Uint8Array(b);var h='';for(var i=0;i<b.length;i++)h+=('0'+b[i].toString(16)).slice(-2);return h}
+  async function inboxToken(){if(!state.key)throw new Error('locked');
+    var k=await crypto.subtle.importKey('raw',state.key,{name:'HMAC',hash:'SHA-256'},false,['sign']);
+    return hex(await crypto.subtle.sign('HMAC',k,new TextEncoder().encode('jshq-inbox-v1')))}
+  async function post(list){var tok=await inboxToken();var lines=list.map(line);
+    var k=await crypto.subtle.importKey('raw',new TextEncoder().encode(tok),{name:'HMAC',hash:'SHA-256'},false,['sign']);
+    var sig=hex(await crypto.subtle.sign('HMAC',k,new TextEncoder().encode(lines.join('\n'))));
+    var body={_subject:'HQ answer'+(list.length>1?'s ('+list.length+')':'')+': '+list.join(', ').slice(0,120),message:lines.join('\n')+'\n\n'+list.length+' answer(s) tapped in HQ at '+new Date().toISOString()+'\nsig: '+sig,_template:'box',_captcha:'false'};
+    var ctl=new AbortController(),tm=setTimeout(function(){ctl.abort()},90000);
+    try{var r=await fetch(INBOX,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(body),signal:ctl.signal,keepalive:true,credentials:'omit'});
+      var j=await r.json().catch(function(){return {}});if(!r.ok||String(j.success)!=='true')throw new Error(j.message||('HTTP '+r.status));return j}finally{clearTimeout(tm)}}
+  function toastMsg(m,showUndo){$('ansToastMsg').textContent=m;var u=$('ansUndo');if(u)u.style.display=showUndo?'':'none';$('ansToast').classList.add('show');clearTimeout(undoTimer);undoTimer=setTimeout(function(){$('ansToast').classList.remove('show')},showUndo?12000:4000)}
+  async function sendNow(list){list=list.filter(function(id){return answered(id)&&!busy[id]});if(!list.length)return;
+    list.forEach(function(id){if(timers[id]){clearTimeout(timers[id]);delete timers[id]}busy[id]=1;var st=document.querySelector('article[data-ans="'+CSS.escape(id)+'"] .ans-state');if(st)st.textContent='Sending to Tab\u2026'});
+    try{await post(list);list.forEach(function(id){delete busy[id]});archive(list,true)}
+    catch(e){list.forEach(function(id){delete busy[id];paint(id)});var u=url(list);
+      $('ansToastMsg').textContent=(e.name==='AbortError'?'No confirmation yet, Tab may still get it. ':'Couldn\u2019t reach Tab ('+e.message+'). Saved here. ');var a=$('ansUndo');a.style.display='';a.textContent='Send on WhatsApp';a.href=u;a.target='_blank';a.dataset.wa='1';
+      $('ansToast').classList.add('show');clearTimeout(undoTimer);undoTimer=setTimeout(function(){$('ansToast').classList.remove('show');a.textContent='Undo';a.removeAttribute('target');a.href='#';delete a.dataset.wa},12000)}}
+  function autoSend(id){if(timers[id])clearTimeout(timers[id]);if(!answered(id))return;var st=document.querySelector('article[data-ans="'+CSS.escape(id)+'"] .ans-state');if(st)st.textContent='Sending to Tab in 3 s\u2026 (tap again to change)';
+    timers[id]=setTimeout(function(){delete timers[id];sendNow([id])},3000)}               // Tab's WhatsApp, never Luis's own number
   var K_ANS='jshq_answers_v1',K_MODE='jshq_answer_mode',K_SENT='jshq_answers_sent_v1';
   var items={},order=[],undoBuf=null,undoTimer=null;
   function load(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
@@ -242,15 +264,14 @@ var ANS=(function(){
     c.querySelectorAll('.ans-opt').forEach(function(b){var on=(a.o||[]).indexOf(b.dataset.v)>=0;var inp=b.querySelector('input');if(inp){inp.checked=on;b.classList.toggle('on',on)}else b.setAttribute('aria-checked',on?'true':'false')});
     var n=c.querySelector('.ans-note');if(n&&document.activeElement!==n)n.value=a.n||'';
     var done=answered(id);c.classList.toggle('ans-done',done);
-    var one=c.querySelector('.ans-one');if(one)one.href=done?url([id]):'#';
+    
     var st=c.querySelector('.ans-state');if(st)st.textContent=done?'Answer saved on this phone':'Not answered';
     var se=c.querySelector('.ans-sent');if(se){var ts=SENT[id];se.classList.toggle('show',!!ts&&!done);se.textContent=ts?'\u2713 Sent to Tab '+fDayTime(new Date(ts).toISOString()):''}}
-  function bar(){var l=ids();$('ansN').textContent='('+l.length+')';$('ansSend').href=l.length?url(l):'#';document.body.classList.toggle('ans-has',l.length>0)}
-  function archive(list){if(!list.length)return;var now=Date.now();undoBuf={a:{},s:{}};
+  function bar(){var l=ids();$('ansN').textContent='('+l.length+')';document.body.classList.toggle('ans-has',l.length>0)}
+  function archive(list,ok){if(!list.length)return;var now=Date.now();undoBuf={a:{},s:{}};
     list.forEach(function(id){undoBuf.a[id]=A[id];undoBuf.s[id]=SENT[id];delete A[id];SENT[id]=now});
     save(K_ANS,A);save(K_SENT,SENT);list.forEach(paint);bar();
-    $('ansToastMsg').textContent=(list.length===1?'1 answer':list.length+' answers')+' sent to WhatsApp and cleared.';
-    $('ansToast').classList.add('show');clearTimeout(undoTimer);undoTimer=setTimeout(function(){$('ansToast').classList.remove('show');undoBuf=null},12000)}
+    toastMsg('\u2713 Sent to Tab'+(list.length>1?' \u00b7 '+list.length+' answers':'')+'. Got it.',false)}
   function undo(){if(!undoBuf)return;for(var id in undoBuf.a){A[id]=undoBuf.a[id];if(undoBuf.s[id])SENT[id]=undoBuf.s[id];else delete SENT[id];paint(id)}
     save(K_ANS,A);save(K_SENT,SENT);undoBuf=null;$('ansToast').classList.remove('show');bar()}
   function card(c,it){var id=it.id;if(!id)return;items[id]=it;order.push(id);c.setAttribute('data-ans',id);
@@ -262,20 +283,20 @@ var ANS=(function(){
     (spec.options||[]).forEach(function(o){var b;
       if(multi){b=el('label','ans-opt');var cb=document.createElement('input');cb.type='checkbox';add(b,cb,document.createTextNode(o));
         cb.addEventListener('change',function(){var a=A[id]||{o:[],n:''};a.o=(a.o||[]).filter(function(x){return x!==o});if(cb.checked)a.o.push(o);
-          a.o.sort(function(x,y){return spec.options.indexOf(x)-spec.options.indexOf(y)});put(id,a);paint(id);bar()})}
+          a.o.sort(function(x,y){return spec.options.indexOf(x)-spec.options.indexOf(y)});put(id,a);paint(id);bar();autoSend(id)})}
       else{b=el('button','ans-opt',o);b.type='button';b.setAttribute('role','radio');
-        b.addEventListener('click',function(){var a=A[id]||{o:[],n:''};a.o=((a.o||[])[0]===o)?[]:[o];put(id,a);paint(id);bar()})}
+        b.addEventListener('click',function(){var a=A[id]||{o:[],n:''};a.o=((a.o||[])[0]===o)?[]:[o];put(id,a);paint(id);bar();autoSend(id)})}
       b.dataset.v=o;add(opts,b)});
     add(box,opts);
     var note=el('input','ans-note');note.type='text';note.maxLength=240;note.placeholder='Add a note for Tab (optional)';note.setAttribute('aria-label','Note for Tab about '+it.title);note.enterKeyHint='done';
-    note.addEventListener('input',function(){var a=A[id]||{o:[],n:''};a.n=note.value;put(id,a);var c2=c;c2.classList.toggle('ans-done',answered(id));var one=c.querySelector('.ans-one');if(one)one.href=answered(id)?url([id]):'#';var st=c.querySelector('.ans-state');if(st)st.textContent=answered(id)?'Answer saved on this phone':'Not answered';bar()});
+    note.addEventListener('input',function(){var a=A[id]||{o:[],n:''};a.n=note.value;put(id,a);var c2=c;c2.classList.toggle('ans-done',answered(id));var st=c.querySelector('.ans-state');if(st)st.textContent=answered(id)?'Answer saved on this phone':'Not answered';bar()});
     note.addEventListener('keydown',function(e){if(e.key==='Enter')note.blur()});
     add(box,note);
     var foot=el('div','ans-foot');var left=el('div','ans-left');
     var clr=el('button','ans-clear','Clear');clr.type='button';clr.addEventListener('click',function(){delete A[id];save(K_ANS,A);paint(id);bar()});
     add(left,el('span','ans-state','Not answered'),clr);
-    var one=el('a','ans-one','Send just this \u2192');one.href='#';one.target='_blank';one.rel='noopener noreferrer';
-    one.addEventListener('click',function(e){if(!answered(id)){e.preventDefault();return}one.href=url([id]);setTimeout(function(){archive([id])},400)});
+    var one=el('a','ans-one','Send now \u2192');one.href='#';one.setAttribute('role','button');
+    one.addEventListener('click',function(e){e.preventDefault();sendNow([id])});
     add(foot,left,one);add(box,foot);add(box,el('div','ans-sent',''));
     add(c,box);
     setTimeout(function(){paint(id)},0)}
@@ -286,8 +307,8 @@ var ANS=(function(){
   function reset(){items={};order=[]}
   function init(){applyMode();
     $('ansMode').addEventListener('click',function(){setMode(!modeOn())});
-    $('ansSend').addEventListener('click',function(e){var l=ids();if(!l.length){e.preventDefault();return}$('ansSend').href=url(l);setTimeout(function(){archive(l)},400)});
-    $('ansUndo').addEventListener('click',undo);
+    $('ansSend').addEventListener('click',function(e){e.preventDefault();sendNow(ids())});
+    $('ansUndo').addEventListener('click',function(e){if(this.dataset.wa){var self=this;setTimeout(function(){self.textContent='Undo'},500);return}e.preventDefault();undo()});
     window.addEventListener('storage',function(e){if(e.key===K_ANS){A=load(K_ANS,{});order.forEach(paint);bar()}})}
   return {card:card,after:after,reset:reset,init:init,_url:function(){return $('ansSend').href}};
 })();
