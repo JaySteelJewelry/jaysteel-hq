@@ -39,7 +39,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 #lockMsg{color:var(--red);font-size:.9375rem;min-height:1.3em;margin:0}
 /* header */
 .hq-head{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.97);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
-.hq-bar{max-width:44rem;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px}
+.hq-bar{max-width:48rem;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px}
 .hq-bar img{border-radius:9999px;flex-shrink:0}
 .hq-id{flex:1;min-width:0}
 .hq-title{margin:0;font-size:1rem;font-weight:800;letter-spacing:.12em;color:var(--ink)}
@@ -59,16 +59,16 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 .hq-badge.warn{background:var(--amber);color:#fff}
 .hq-badge.alert{background:var(--red);color:#fff}
 @media (min-width:768px){
-  .hq-tabs{position:static;max-width:44rem;margin:0 auto;padding:0 16px 8px;box-shadow:none;border-top:0;gap:4px;overflow-x:auto;scrollbar-width:none}
-  .hq-tab{flex:1 0 auto;flex-direction:row;min-height:44px;font-size:.875rem;gap:6px;padding:0 12px;background:var(--bg)}
-  .hq-tab svg{width:18px;height:18px}
+  .hq-tabs{position:static;max-width:48rem;margin:0 auto;padding:0 16px 8px;box-shadow:none;border-top:0;gap:4px;overflow-x:auto;scrollbar-width:none}
+  .hq-tab{flex:1 0 auto;flex-direction:row;min-height:44px;font-size:.8125rem;gap:6px;padding:0 10px;background:var(--bg)}
+  .hq-tab svg{width:16px;height:16px}
   .hq-tab[aria-selected=true]{background:var(--ink);color:#fff}
   .hq-tab[aria-selected=true]:after{display:none}
   .hq-badge{position:static;border:0;background:var(--line);color:var(--ink)}
   .hq-tab[aria-selected=true] .hq-badge{background:#fff;color:var(--ink)}
   .hq-badge.alert{background:var(--red);color:#fff}
 }
-main.hq-main{max-width:44rem;margin:0 auto;padding:0 16px calc(var(--nav) + 40px + env(safe-area-inset-bottom))}
+main.hq-main{max-width:48rem;margin:0 auto;padding:0 16px calc(var(--nav) + 40px + env(safe-area-inset-bottom))}
 @media (min-width:768px){main.hq-main{padding-bottom:60px}}
 .hq-panel{display:none}
 .hq-panel.on{display:block}
