@@ -59,8 +59,8 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 .hq-badge.warn{background:var(--amber);color:#fff}
 .hq-badge.alert{background:var(--red);color:#fff}
 @media (min-width:768px){
-  .hq-tabs{position:static;max-width:44rem;margin:0 auto;padding:0 16px 8px;box-shadow:none;border-top:0;gap:6px}
-  .hq-tab{flex-direction:row;min-height:44px;font-size:.875rem;gap:8px;padding:0 10px;background:var(--bg)}
+  .hq-tabs{position:static;max-width:44rem;margin:0 auto;padding:0 16px 8px;box-shadow:none;border-top:0;gap:4px;overflow-x:auto;scrollbar-width:none}
+  .hq-tab{flex:1 0 auto;flex-direction:row;min-height:44px;font-size:.875rem;gap:6px;padding:0 12px;background:var(--bg)}
   .hq-tab svg{width:18px;height:18px}
   .hq-tab[aria-selected=true]{background:var(--ink);color:#fff}
   .hq-tab[aria-selected=true]:after{display:none}
