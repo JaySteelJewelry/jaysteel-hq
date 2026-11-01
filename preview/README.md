@@ -288,7 +288,7 @@ v3 fields are written by `hq2.enrich()`: `short_title` (emoji/score prefix remov
 In `hq2.py` → `build_agents()`, add one `row(...)` call: key, name, what it does, cadence, then last run / last result /
 next run / health. For a Tab schedule use `find_sched(sched_list, r'^FIRST WORDS OF ITS INSTRUCTION')` and `sched_health(s, now)`,
 which reads the schedule's own run records (on time, late, failed, missed). For anything else, read its own log or API
-(see the Crypto Funding Desk row, which reads GitHub's run list) and set health honestly.
+(e.g. GitHub's run list for an Actions job) and set health honestly.
 
 ## Add a new account to Numbers
 Add an entry to `files/hq/accounts_source.json` (platform, handle, url, collector: instagram | facebook | pinterest | public | none).
