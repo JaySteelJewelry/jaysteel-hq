@@ -296,3 +296,7 @@ For a new platform, add a collector branch in `build.py` → `collect_account()`
 Discord and Square). Return `followers`, `views_48h`, `views_7d` or `None`, plus a `note` saying why a value is missing.
 Change since last rebuild, the 7-day change and the sparkline history are computed automatically: every build appends a
 point to `files/hq/preview/stats_history.json` (box only, last 500) and ships the last 30 days, one point per day, in stats.json.
+
+
+## Look (v3.1, Nov 1 evening)
+Default appearance is **Dark**: deep charcoal/slate (#13151B base, #1E2129 cards with 1px borders and soft shadows), brand gold accents, off-white text (#ECE8E1), muted grey (#9AA0A8), softened red/amber/green. Settings → Look → Appearance: Dark / Light / Match phone (Match phone follows the phone's light/dark setting). Gold/Rose accent works in both. Kept on this phone.
