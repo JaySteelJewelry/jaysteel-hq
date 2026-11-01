@@ -346,7 +346,7 @@ function card(x,rank){var c=el('article','card nc u'+x.lvl+' fade-in');c.dataset
   function optBtn(op,wrap,full){var on=A[x.id]&&A[x.id].o.indexOf(op)>=0;var lab=full?op:op.replace(/,\s.*$/,'');var b=btn('btn ans'+(on?' on':''),lab,function(){pick(x,op,wrap)});b.dataset.op=op;if(lab!==op)b.setAttribute('aria-label',op);b.setAttribute('aria-pressed',on?'true':'false');return b}
   if(inline)opts.forEach(function(op){add(acts,optBtn(op,acts))});
   else if(opts.length){var ch2=btn('btn pri','Choose\u2026',function(){tog()});add(acts,ch2)}
-  if(x.link&&/^(https?:|mailto:)/.test(x.link))add(acts,link(x.link,ico('ext',18),'btn sq')).setAttribute('aria-label','Open '+(x.link_label||'link'));
+  if(x.link&&/^(https?:|mailto:)/.test(x.link)){var lk=link(x.link,ico('ext',18),'btn sq');lk.setAttribute('aria-label','Open '+(x.link_label||'link'));add(acts,lk)}
   var more=el('div','more'),inner=el('div');add(more,inner);
   if(acts.firstChild)add(c,acts);
   var SENT=sent();if(SENT[x.id])add(c,el('p','t-xs grn mt-2','\u2713 Sent to Tab '+fDT(new Date(SENT[x.id]).toISOString())));
@@ -395,7 +395,7 @@ function tlItem(r,showDay){var li=el('div','ti');add(li,pf(r.platform||r.kind===
   var when=r.time?fT(r.time):(r.all_day||r.time_suspect)?'time TBC':fT(r.start)+(r.end&&!r.all_day?'\u2013'+fT(r.end):'');
   add(b,el('div','when',(showDay?fmt(r.time||r.start,{weekday:'short'})+' \u00b7 ':'')+when));add(b,el('div','sb',(r.title||'Post')+(r.count>1?' \u00d7'+r.count:'')));
   var meta=[r.platform,r.kind==='post'?'promo post due':r.kind==='job'?'scheduled job':null,r.where?r.where.split('\n')[0]:null,r.status].filter(Boolean).join(' \u00b7 ');if(meta)add(b,el('div','t-xs mute mt-0.5',meta));
-  if(r.link)add(b,link(r.link,add(el('span'),'Open ',ico('ext',14)),'t-sm acc b inline-flex items-center gap-1')).style.cssText='min-height:44px;min-width:44px';add(li,b);return li}
+  if(r.link){var lk=link(r.link,add(el('span'),'Open ',ico('ext',14)),'t-sm acc b inline-flex items-center gap-1');lk.style.cssText='min-height:44px;min-width:44px';add(b,lk)}add(li,b);return li}
 var CLAIM={};
 R.today=function(box){var rows=schedRows();secHead(box,'Today & Tomorrow',null,null,fmt(new Date(),{weekday:'short',month:'short',day:'numeric'})+' \u00b7 ET');if(!rows)return missing(box,'schedule'),null;
   var now=Date.now(),td=etDay(now),tm=etDay(now+864e5),n=0;
@@ -426,7 +426,7 @@ R.agents=function(box){var d=st.data.agents;if(!d){secHead(box,'Agents');return 
     function k(x,y,c){add(kv,el('dt','',x));add(kv,el('dd',c||'',y))}k('Schedule',a.cadence||'\u2014');k('Last run',a.last_run?ago(a.last_run)+' \u00b7 '+fDT(a.last_run):'none recorded');k('Result',a.last_result||'\u2014');
     k('Next run',a.next_run?fDT(a.next_run):'\u2014');if(a.health_why)k('Health',a.health_why,a.health==='red'?'red':'amb');add(dd,kv);if(a.link)add(dd,link(a.link,'Open \u2192','btn mt-2'));add(mi,dd);add(w,m);add(list,w)});
   add(box,list);add(box,el('p','t-xs dim mt-2','\u25CF green = ran on time \u00b7 yellow = late or partial \u00b7 red = failed or missed. Tap a row for details.'));
-  return {n:A.length,warn:A.length-ok}};
+  return {n:A.length,warn:A.filter(function(a){return a.health==='red'}).length}};
 function spark(H){var v=H.map(function(p){return p[1]}),mn=Math.min.apply(0,v),mx=Math.max.apply(0,v),w=120,h=28,s=document.createElementNS(SVG,'svg');s.setAttribute('viewBox','0 0 '+w+' '+h);s.setAttribute('width','100%');s.setAttribute('height',h);s.setAttribute('preserveAspectRatio','none');s.setAttribute('aria-hidden','true');
   var pts=v.map(function(y,i){return (v.length===1?w:i*w/(v.length-1)).toFixed(1)+','+(mx===mn?h/2:(h-3-(y-mn)/(mx-mn)*(h-6))).toFixed(1)}).join(' ');
   var a=document.createElementNS(SVG,'polygon');a.setAttribute('points','0,'+h+' '+pts+' '+w+','+h);a.setAttribute('fill','var(--accbg)');s.appendChild(a);
@@ -453,7 +453,7 @@ function render(soft){stamp();var main=$('sections'),y=window.scrollY,nav=$('tab
   var order=S.order.slice(),ti=order.indexOf('today'),ni=order.indexOf('next');
   S.order.forEach(function(id){if(S.hidden[id])return;var sec=SECTIONS.filter(function(s){return s.id===id})[0];var box=el('section','sec');box.id=id;box.setAttribute('aria-label',sec.name);add(main,box);var r=null;
     try{r=R[id](box)}catch(e){box.textContent='';secHead(box,sec.name);add(box,el('div','empty','Data missing: could not show this section ('+e.message+').'))}
-    var a=el('a','tab'+(r&&r.warn?' warn':''));a.href='#'+id;a.dataset.sec=id;add(a,sec.tab);if(r&&r.n!=null&&id!=='numbers')add(a,el('span','n',String(r.n)));
+    var a=el('a','tab'+(r&&r.warn?' warn':''));a.href='#'+id;a.dataset.sec=id;add(a,sec.tab);if(r&&r.n!=null&&id!=='numbers'&&!(r.n===0&&(id==='today'||id==='next')))add(a,el('span','n',String(r.n)));
     a.onclick=function(ev){ev.preventDefault();jump(id)};add(nav,a)});
   if(soft)window.scrollTo(0,y);bar();spy();
   var errs=FILES.filter(function(n){return st.err[n]}).map(function(n){return n+'.json: '+st.err[n]});$('srcErr').textContent=errs.length?'Missing this load: '+errs.join(' \u00b7 '):''}
@@ -493,7 +493,7 @@ function buildSettings(){var B=el('div');B.style.cssText='display:grid;gap:16px'
   add(g3,toggle('Hide the stale drawer','asks overdue 7+ days or past their event date',function(){return S.hideStale},function(v){S.hideStale=v}));
   add(g3,toggle('Answer buttons','\u2705 / \u274C on each card, sent to Tab in one tap',function(){return S.answers},function(v){S.answers=v}));
   add(g3,toggle('Hide what I already answered','for 3 days after you send it',function(){return S.doneHidden},function(v){S.doneHidden=v}));
-  var g4=ap(B,group('Look'));add(g4,seg('Accent',[['gold','\u25CF Gold'],['rose','\u25CF Rose']],function(){return S.accent},function(v){S.accent=v}));
+  var g4=ap(B,group('Look'));add(g4,seg('Accent',[['gold','Gold'],['rose','Rose']],function(){return S.accent},function(v){S.accent=v}));
   add(g4,toggle('Larger text',null,function(){return S.large},function(v){S.large=v}));
   add(g4,toggle('Compact cards','titles, deadlines and buttons only',function(){return S.compact},function(v){S.compact=v}));
   var g1=ap(B,group('Sections'));add(g1,el('p','t-xs mute','Show, hide or move sections. Kept on this phone.'));
