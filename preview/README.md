@@ -5,32 +5,27 @@ Preview URL: https://jaysteeljewelry.github.io/jaysteel-hq/preview/  ·  Live HQ
 
 This folder is a **preview**. The live page at the repo root stays as it is until Luis says "make it live".
 
-## What you see (in this order)
-0. **10-second strip** (always on top): Next event (name, day, time, countdown; tap = details), Money due this week
-   (total + count of payments due in 7 days; tap = list), Urgent asks (due within 72 h, overdue counted; tap = jump),
-   Agents health ("7/9 OK" with a dot; tap = jump). "Updated X min ago" sits in the header.
-1. **Needs You**: only the top 5 (Settings: 3 / 5 / 10) by real urgency: deadline soon, money, event date soon, Scout score.
-   Compact card: bold title, one-line why (≤ 96 chars), deadline chip, ✅ / ❌ / ✏️ buttons, link button; the chevron opens the
-   full why, the action, the deadline note and the full application draft. "Show all (N)" expands the rest grouped as
-   Payments / Decisions / Approvals / Accounts (collapsible, with counts). Asks overdue more than 7 days, or whose event
-   date has passed, go to a collapsed **"Stale — clear these?"** drawer: ❌ (or "Clear all") sends "❌ No (stale, dismissed
-   from HQ)" on the same signed answer channel after 3 s, with Undo. Settings can hide the drawer.
-2. **Today & Tomorrow**: today's and tomorrow's events/posts; when both are empty it shows the next upcoming event so the
-   section is never blank. Agent runs later today are one small line, not rows.
-3. **Agents**: compact rows (dot, name, last result in one line, next run). Failing (red) then yellow float to the top.
-   Tap a row for what it does, last run, schedule, result, health reason.
-4. **Numbers**: one tile per account: followers big, ▲/▼ change over 7 days (or since the first point while history is
-   shorter), a sparkline once there are 2+ days of history, views underneath. "Data missing" tiles are greyed with the reason.
-5. **Last 24 h**: timeline of posts with platform badge, time and link.
-6. **Next 48 h**: timeline of events, promo posts due and one-time jobs not already shown under Today & Tomorrow.
+## What you see (v3.2, Nov 1: simple navigation, no Settings page)
+Four pages in a bottom bar, switched instantly with no reload (tap, or swipe left/right). The header stays on top with
+Refresh, a sun/moon button (Dark/Light, remembered on the phone, Dark by default) and a ⋯ menu. The phone's Back button closes
+any open sheet first, then steps back through pages. Old links (#needs #today #next #posts #agents #automations) still land on the right page.
+1. **Home**: the 10-second strip (Next event, Due this week, Urgent asks, Team health) and **Needs You**: the top 5 by real urgency,
+   compact cards with answer chips (✅ / ❌ / pick lists) and "Send to Tab"; "Show all (N)" groups the rest; the
+   **"Stale — clear these?"** drawer lets one tap tell Tab to drop old asks (3 s Undo).
+2. **Calendar**: one timeline with day headers (Today, Tomorrow, then each day up to 8 days out) plus the last 24 h of posts.
+   It shows real events (tap for details), promo posts Tab will publish, payment and decision deadlines from Needs You (tap to answer),
+   and reminders that go to Luis. Tab's own one-time housekeeping jobs are never shown.
+3. **Numbers**: Money (due this week, all open payments, each one tap from its card) with the **Payment reminders** switch,
+   then Followers per account (big number, 7-day change, sparkline).
+4. **Team**: Tab's helpers (Booker, Scout, briefs, sync, autoposter…), failing ones first; tap a row for what it does, last/next run.
 
-Look: Chain Link brand (gold #C9A227 on near-black; Rose accent in Settings), sticky section tabs that highlight where you
-are, smooth expand/collapse, Refresh spins and toasts "Updated just now". Settings (gear): top N, hide stale drawer,
-accent, answer buttons, hide answered, larger text, compact cards, show/hide/reorder sections, auto re-pull, data status,
-remember / forget device.
+**⋯ menu**: Refresh now, show/hide the stale drawer, Data status, Remember this device, Lock & sign out.
+Fixed choices (no knobs): gold accent, top 5 cards, answer buttons on, answered cards hidden for 3 days, re-pull every 30 min.
+The Payment reminders switch sends "HQ automation: Payment reminders → ON|OFF" on the same signed answer channel as the cards
+(WhatsApp fallback) and shows "Turning on/off…" until Tab's next update confirms it.
 
-Rules the builder enforces: duplicates merge into one row with a ×count; an item is never in two sections (Needs You wins);
-the page shows "Updated X min ago"; dark theme, 44 px+ tap targets, one HTML file (CSS inlined, no external scripts or fonts).
+Rules the builder enforces: duplicates merge into one row with a ×count; the page shows "Updated X min ago"; 44 px+ tap targets;
+one HTML file (CSS inlined, no external scripts or fonts).
 
 ## Privacy
 - Every data file in `data/` is **encrypted** (gzip, then AES-256-GCM; key = PBKDF2-SHA256(password, salt, 600,000)).
@@ -265,7 +260,7 @@ v3 fields are written by `hq2.enrich()`: `short_title` (emoji/score prefix remov
   schedules) that a GitHub Actions runner cannot reach. `build.py` runs inside every scheduled job: Booker every 3 h (:21 past),
   6:30 AM brief, 10 AM Scout, 7 PM brief, 11:30 PM nightly sync, and right after any inbox status change. So data is
   **about every 3 hours**, not every 30 minutes. No extra 30-minute job was added.
-- **The page** re-pulls the encrypted files every 30 min while open (Settings: off / 5 / 15 / 30), on return to the app after
+- **The page** re-pulls the encrypted files every 30 min while open, on return to the app after
   10 min, and on the Refresh button (no rebuild). Today, Next 48 h, "overdue" and "Updated X min ago" are recomputed every
   minute on the phone, so they are right between rebuilds.
 - A GitHub Actions cron was not added: it could only re-publish the same encrypted files, and it cannot decrypt them.
@@ -299,4 +294,4 @@ point to `files/hq/preview/stats_history.json` (box only, last 500) and ships th
 
 
 ## Look (v3.1, Nov 1 evening)
-Default appearance is **Dark**: deep charcoal/slate (#13151B base, #1E2129 cards with 1px borders and soft shadows), brand gold accents, off-white text (#ECE8E1), muted grey (#9AA0A8), softened red/amber/green. Settings → Look → Appearance: Dark / Light / Match phone (Match phone follows the phone's light/dark setting). Gold/Rose accent works in both. Kept on this phone.
+Default appearance is **Dark**: deep charcoal/slate (#13151B base, #1E2129 cards with 1px borders and soft shadows), brand gold accents, off-white text (#ECE8E1), muted grey (#9AA0A8), softened red/amber/green. Since v3.2 the sun/moon button in the header flips Dark / Light (Dark by default, remembered on the phone).
