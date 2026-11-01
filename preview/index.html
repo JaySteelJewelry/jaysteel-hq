@@ -469,7 +469,7 @@ async function post(L,ids){var k=await crypto.subtle.importKey('raw',st.key,{nam
   var k2=await crypto.subtle.importKey('raw',new TextEncoder().encode(tok),{name:'HMAC',hash:'SHA-256'},false,['sign']);var sig=hex(await crypto.subtle.sign('HMAC',k2,new TextEncoder().encode(L.join('\n'))));
   var body={_subject:'HQ answer'+(ids.length>1?'s ('+ids.length+')':'')+': '+ids.join(', ').slice(0,120),message:L.join('\n')+'\n\n'+ids.length+' answer(s) tapped in HQ preview at '+new Date().toISOString()+'\nsig: '+sig,_template:'box',_captcha:'false'};
   var ctl=new AbortController(),tm=setTimeout(function(){ctl.abort()},60000);
-  var r=await fetch(INBOX,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(body),signal:ctl.signal,keepalive:true,credentials:'omit'});clearTimeout(tm);
+  var r=await fetch(INBOX,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(body),signal:ctl.signal,keepalive:true,referrerPolicy:'origin',credentials:'omit'});clearTimeout(tm);
   var j=await r.json().catch(function(){return {}});if(!r.ok||String(j.success)!=='true')throw new Error(j.message||('HTTP '+r.status));
   var SENT=load(K_SENT,{}),now=Date.now();ids.forEach(function(id){SENT[id]=now});save(K_SENT,SENT)}
 function lines(){var A=load(K_ANS,{});return Object.keys(A).map(function(id){return 'HQ '+id+' \u2014 '+A[id].t+': '+A[id].o.join(' + ')})}
