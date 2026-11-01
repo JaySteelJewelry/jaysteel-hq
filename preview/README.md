@@ -1,4 +1,4 @@
-# JAY STEEL HQ — preview (v2)
+# JAY STEEL HQ — preview (v3)
 
 Private, mobile-first dashboard: everything the business and its automations are doing, readable in 10 seconds.
 Preview URL: https://jaysteeljewelry.github.io/jaysteel-hq/preview/  ·  Live HQ (unchanged): https://jaysteeljewelry.github.io/jaysteel-hq/
@@ -6,16 +6,28 @@ Preview URL: https://jaysteeljewelry.github.io/jaysteel-hq/preview/  ·  Live HQ
 This folder is a **preview**. The live page at the repo root stays as it is until Luis says "make it live".
 
 ## What you see (in this order)
-1. **Needs You**: only things only Luis can do, most urgent first (overdue, then by deadline, then money > decisions > approvals > accounts).
-   Each card: title, why it matters, the exact action, deadline. Overdue cards turn red. ✅/❌ chips send answers to Tab
-   (signed message to Tab's inbox; WhatsApp fallback). Asks whose event date already passed are hidden and counted.
-2. **Today**: what goes live today, times in America/New_York.
-3. **Agents**: one row per automation: what it does, last run, last result, next run, health dot
-   (green = ran on time and OK, yellow = late / partial / limited, red = failed or missed).
-4. **Numbers**: per account: followers, views 48 h / 7 d, change since the previous rebuild. A number a platform did not give
-   is shown as "data missing" with the reason. Nothing is ever estimated.
-5. **Last 24 h**: every post (platform, time, link).
-6. **Next 48 h**: events, promo posts due, one-time jobs. Recurring agent runs live in Agents only.
+0. **10-second strip** (always on top): Next event (name, day, time, countdown; tap = details), Money due this week
+   (total + count of payments due in 7 days; tap = list), Urgent asks (due within 72 h, overdue counted; tap = jump),
+   Agents health ("7/9 OK" with a dot; tap = jump). "Updated X min ago" sits in the header.
+1. **Needs You**: only the top 5 (Settings: 3 / 5 / 10) by real urgency: deadline soon, money, event date soon, Scout score.
+   Compact card: bold title, one-line why (≤ 96 chars), deadline chip, ✅ / ❌ / ✏️ buttons, link button; the chevron opens the
+   full why, the action, the deadline note and the full application draft. "Show all (N)" expands the rest grouped as
+   Payments / Decisions / Approvals / Accounts (collapsible, with counts). Asks overdue more than 7 days, or whose event
+   date has passed, go to a collapsed **"Stale — clear these?"** drawer: ❌ (or "Clear all") sends "❌ No (stale, dismissed
+   from HQ)" on the same signed answer channel after 3 s, with Undo. Settings can hide the drawer.
+2. **Today & Tomorrow**: today's and tomorrow's events/posts; when both are empty it shows the next upcoming event so the
+   section is never blank. Agent runs later today are one small line, not rows.
+3. **Agents**: compact rows (dot, name, last result in one line, next run). Failing (red) then yellow float to the top.
+   Tap a row for what it does, last run, schedule, result, health reason.
+4. **Numbers**: one tile per account: followers big, ▲/▼ change over 7 days (or since the first point while history is
+   shorter), a sparkline once there are 2+ days of history, views underneath. "Data missing" tiles are greyed with the reason.
+5. **Last 24 h**: timeline of posts with platform badge, time and link.
+6. **Next 48 h**: timeline of events, promo posts due and one-time jobs not already shown under Today & Tomorrow.
+
+Look: Chain Link brand (gold #C9A227 on near-black; Rose accent in Settings), sticky section tabs that highlight where you
+are, smooth expand/collapse, Refresh spins and toasts "Updated just now". Settings (gear): top N, hide stale drawer,
+accent, answer buttons, hide answered, larger text, compact cards, show/hide/reorder sections, auto re-pull, data status,
+remember / forget device.
 
 Rules the builder enforces: duplicates merge into one row with a ×count; an item is never in two sections (Needs You wins);
 the page shows "Updated X min ago"; dark theme, 44 px+ tap targets, one HTML file (CSS inlined, no external scripts or fonts).
@@ -40,7 +52,7 @@ preview/
     stats.json        encrypted
 ```
 On Tab's box (not in the repo): `files/hq/build.py` (live HQ builder) calls `files/hq/preview/hq2.py` (this preview's data
-builder), `preview/encrypt_many.mjs` (encryption), `preview/tw/` (page template + Tailwind build), `preview/test/test_preview.py`
+builder), `preview/encrypt_many.mjs` (encryption), `preview/tw/` (index.template.html + app.js + Tailwind build), `preview/test/test_preview3.py`
 (real-browser test), `preview/sample/` (sample data), `preview/data_plain/` (last plain copy, box only).
 
 Each encrypted file looks like:
@@ -68,6 +80,12 @@ the other sections keep working.
    "link": "https://example.com/invoice",
    "link_label": "Open invoice →",
    "kind": "money",
+   "type": "payments",
+   "short_title": "Pay Example Holiday Market, Sat Dec 5 ($50)",
+   "why1": "Approved for Sat Dec 5, not paid yet.",
+   "amount": 50,
+   "event_date": "2026-12-05",
+   "expired": null,
    "count": 1,
    "answer": {
     "kind": "pay",
@@ -90,6 +108,11 @@ the other sections keep working.
    "link": null,
    "link_label": null,
    "kind": "approve",
+   "type": "approvals",
+   "short_title": "Apply to Example Craft Fair Sat Nov 21",
+   "why1": "6.1 mi away · $40 fee",
+   "score": 72,
+   "event_date": "2026-11-21",
    "count": 2,
    "answer": {
     "kind": "approve",
@@ -102,10 +125,14 @@ the other sections keep working.
    }
   }
  ],
- "hidden_expired": [
-  "✋ Approve: apply to Example Fall Fest Sat Oct 31"
- ]
+ "hidden_expired": []
 }
+```
+v3 fields are written by `hq2.enrich()`: `short_title` (emoji/score prefix removed), `why1` (one line; a `why_short` field in
+`needs_you_source.json` overrides it), `type` (approvals / payments / decisions / accounts), `amount`, `miles`, `score`,
+`event_date` (first future date in the title), `expired` (every date in the title has passed → stale drawer). Urgency and
+"stale" are computed on the phone so they stay right between rebuilds.
+```
 ```
 ### agents.json
 ```json
@@ -212,7 +239,10 @@ the other sections keep working.
     "views_48h": -5,
     "views_7d": 12
    },
-   "note": null
+   "note": null,
+   "change_7d": 3,
+   "change_since": "week",
+   "history": [["2026-10-30", 117], ["2026-10-31", 118], ["2026-11-01", 120]]
   },
   {
    "key": "instagram",
@@ -244,12 +274,12 @@ the other sections keep working.
 1. Repo `JaySteelJewelry/jaysteel-hq`, GitHub Pages on `main` / root. This folder lives at `/preview/`.
 2. On Tab's box: password in `/home/user/tab/state/hq/password.txt` (mode 600). Salt is created on first run in
    `/home/user/tab/state/hq/crypto.json`; changing the password makes every device unlock again.
-3. Page template: edit `files/hq/preview/tw/index.template.html`, then `sh files/hq/preview/tw/build_site.sh`
+3. Page: edit `files/hq/preview/tw/index.template.html` (markup + CSS) and `tw/app.js` (all JS), then `sh files/hq/preview/tw/build_site.sh`
    (Tailwind 3 from `files/hq/tw/node_modules`).
 4. Build + push: `TAB_TASK_ID=<task id> timeout -k 5 200 python3 /home/user/tab/files/hq/build.py`
    (exit 2 = push failed, retry once). Add `--preview-shell` to force re-pushing index.html + README.md, `--no-push` for a dry run.
    The preview is never fatal: if it fails, the live HQ still pushes and the log says why.
-5. Test: `python3 files/hq/preview/test/test_preview.py --shots DIR` (local), `--url https://jaysteeljewelry.github.io/jaysteel-hq/preview/`
+5. Test: `python3 files/hq/preview/test/test_preview3.py --shots DIR` (local), `--url https://jaysteeljewelry.github.io/jaysteel-hq/preview/`
    (live), `--missing agents` (missing-file check), `--site DIR` (another build, e.g. sample data).
 6. Make it live (only on Luis's word): copy `preview/index.html` to the root, point it at `preview/data/` (or move the data),
    and keep the old root page as a backup.
@@ -264,4 +294,5 @@ which reads the schedule's own run records (on time, late, failed, missed). For 
 Add an entry to `files/hq/accounts_source.json` (platform, handle, url, collector: instagram | facebook | pinterest | public | none).
 For a new platform, add a collector branch in `build.py` → `collect_account()` (or a block in `hq2.py` → `build_stats()`, like
 Discord and Square). Return `followers`, `views_48h`, `views_7d` or `None`, plus a `note` saying why a value is missing.
-Change since last rebuild is computed automatically.
+Change since last rebuild, the 7-day change and the sparkline history are computed automatically: every build appends a
+point to `files/hq/preview/stats_history.json` (box only, last 500) and ships the last 30 days, one point per day, in stats.json.
