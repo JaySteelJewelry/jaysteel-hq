@@ -237,7 +237,7 @@ var ANS=(function(){
     var sig=hex(await crypto.subtle.sign('HMAC',k,new TextEncoder().encode(lines.join('\n'))));
     var body={_subject:'HQ answer'+(list.length>1?'s ('+list.length+')':'')+': '+list.join(', ').slice(0,120),message:lines.join('\n')+'\n\n'+list.length+' answer(s) tapped in HQ at '+new Date().toISOString()+'\nsig: '+sig,_template:'box',_captcha:'false'};
     var ctl=new AbortController(),tm=setTimeout(function(){ctl.abort()},90000);
-    try{var r=await fetch(INBOX,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(body),signal:ctl.signal,keepalive:true,credentials:'omit'});
+    try{var r=await fetch(INBOX,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(body),signal:ctl.signal,keepalive:true,referrerPolicy:'origin',credentials:'omit'});
       var j=await r.json().catch(function(){return {}});if(!r.ok||String(j.success)!=='true')throw new Error(j.message||('HTTP '+r.status));return j}finally{clearTimeout(tm)}}
   function toastMsg(m,showUndo){$('ansToastMsg').textContent=m;var u=$('ansUndo');if(u)u.style.display=showUndo?'':'none';$('ansToast').classList.add('show');clearTimeout(undoTimer);undoTimer=setTimeout(function(){$('ansToast').classList.remove('show')},showUndo?12000:4000)}
   async function sendNow(list){list=list.filter(function(id){return answered(id)&&!busy[id]});if(!list.length)return;
